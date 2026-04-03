@@ -1,0 +1,110 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Brand {
+  id              String   @id @default(cuid())
+  name            String
+  fontHeadline    String   @default("IBM Plex Sans")
+  fontBody        String   @default("IBM Plex Sans")
+  accentColor     String   @default("#7F9590")
+  backgroundColor String   @default("#F5F5F5")
+  textColor       String   @default("#222222")
+  logoUrl         String?
+  editingTier     String   @default("hyper_simple") // hyper_simple | medium | high
+  brandVoiceMd    String?  // markdown content
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  scripts Script[]
+  videos  Video[]
+  brollClips BrollClip[]
+}
+
+model Script {
+  id            String   @id @default(cuid())
+  brandId       String
+  brand         Brand    @relation(fields: [brandId], references: [id])
+  title         String
+  body          String   // the actual script text
+  source        String   @default("manual") // manual | notion
+  notionPageId  String?
+  scheduledDate DateTime?
+  platform      String?  // tiktok | instagram | linkedin | etc
+  status        String   @default("pending") // pending | recording | recorded | processing | posted
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  takes  Take[]
+  videos Video[]
+}
+
+model Take {
+  id         String   @id @default(cuid())
+  scriptId   String
+  script     Script   @relation(fields: [scriptId], references: [id], onDelete: Cascade)
+  filePath   String   // path to raw video file
+  duration   Float?   // seconds
+  takeNumber Int
+  selected   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+}
+
+model Video {
+  id              String   @id @default(cuid())
+  scriptId        String
+  script          Script   @relation(fields: [scriptId], references: [id])
+  brandId         String
+  brand           Brand    @relation(fields: [brandId], references: [id])
+  inputFilePath   String   // selected take file
+  outputFilePath  String?  // edited video file
+  captionFilePath String?  // SRT/VTT file
+  status          String   @default("queued") // queued | transcribing | editing | awaiting_approval | approved | posting | posted | error | human_review
+  feedback        String?  // user feedback for re-edit
+  editParams      String?  // JSON string of Remotion params used
+  metricoolPostId String?
+  postedAt        DateTime?
+  errorLog        String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  jobs Job[]
+}
+
+model Job {
+  id        String   @id @default(cuid())
+  videoId   String
+  video     Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  type      String   // transcribe | edit | post | re_edit
+  status    String   @default("queued") // queued | running | completed | failed
+  payload   String?  // JSON params
+  result    String?  // JSON result
+  errorLog  String?
+  startedAt DateTime?
+  endedAt   DateTime?
+  createdAt DateTime @default(now())
+}
+
+model BrollClip {
+  id       String  @id @default(cuid())
+  brandId  String
+  brand    Brand   @relation(fields: [brandId], references: [id])
+  filePath String
+  source   String  @default("upload") // upload | pexels
+  keywords String  // comma-separated keywords
+  duration Float?  // seconds
+  pexelsId String? // if from Pexels
+  createdAt DateTime @default(now())
+}
+
+model Setting {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+}
