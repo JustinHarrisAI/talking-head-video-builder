@@ -1,26 +1,47 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #F5F5F5;
+  --foreground: #222222;
+  --foreground-secondary: #515150;
+  --accent: #7F9590;
+  --surface: #FFFFFF;
+  --border: #E0E0E0;
+  --error: #D32F2F;
+  --success: #2E7D32;
+  --warning: #F57C00;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-foreground-secondary: var(--foreground-secondary);
+  --color-accent: var(--accent);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
+  --color-error: var(--error);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: "IBM Plex Sans", Arial, Helvetica, sans-serif;
+}
+
+/* ── Niflheim Button Radius Doctrine (LOCKED 2026-04-29) ──
+   Canonical: clients/justinharris-ai/builds/design-system/BUTTON-RADIUS-DOCTRINE.md
+   Every <button>, [role="button"], and .cta-pulse defaults to 12px (var(--r-md)).
+   Structural floor: square is unreachable from any code path on a JH.AI surface.
+   To opt out (rare): Tailwind rounded-none wins via specificity. */
+button,
+[role="button"],
+.cta-pulse,
+button[type="submit"],
+button[type="button"],
+button[type="reset"] {
+  border-radius: 12px;
 }

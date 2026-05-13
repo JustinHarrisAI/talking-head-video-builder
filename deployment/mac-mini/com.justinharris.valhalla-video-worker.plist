@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Mac Mini launchd unit for the Valhalla video renderer (workers-v2).
+
+  Install path: ~/Library/LaunchAgents/com.justinharris.valhalla-video-worker.plist
+
+  Loaded with:
+    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.justinharris.valhalla-video-worker.plist
+    launchctl enable     gui/$(id -u)/com.justinharris.valhalla-video-worker
+
+  Verify:
+    launchctl print gui/$(id -u)/com.justinharris.valhalla-video-worker | head -30
+    tail -F /tmp/valhalla-video-worker.{out,err}.log
+
+  Author: Baldr / Volundr (S20 Phase 6 deploy, 2026-04-30)
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.justinharris.valhalla-video-worker</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <!-- ABSOLUTE path; launchd won't expand $HOME. Replace JUSTIN with
+             the actual home username on Mac Mini if different. -->
+        <string>/Users/justinharris/code/JustinHarris.AI/clients/justinharris-ai/builds/talking-head-video-builder/deployment/mac-mini/start-valhalla-video-worker.sh</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/justinharris/code/JustinHarris.AI/clients/justinharris-ai/builds/talking-head-video-builder</string>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>KeepAlive</key>
+    <dict>
+        <key>SuccessfulExit</key>
+        <false/>
+        <key>Crashed</key>
+        <true/>
+    </dict>
+
+    <!-- Restart no faster than every 30s if the process keeps dying. Avoids
+         pegging the Mac on a tight crash loop. -->
+    <key>ThrottleInterval</key>
+    <integer>30</integer>
+
+    <key>StandardOutPath</key>
+    <string>/tmp/valhalla-video-worker.out.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/tmp/valhalla-video-worker.err.log</string>
+
+    <!-- Process priority. Renderer is CPU-intensive; let it run at default
+         priority so FFmpeg can saturate cores. Nice 0 = default. -->
+    <key>Nice</key>
+    <integer>0</integer>
+
+    <!-- Keep the process group separate so SIGTERM at logout doesn't take
+         the worker with it (it should survive between user sessions). -->
+    <key>ProcessType</key>
+    <string>Background</string>
+</dict>
+</plist>
